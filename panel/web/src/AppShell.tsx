@@ -4,6 +4,7 @@ import { useAuth } from './auth';
 import { useUI, PasswordInput } from './ui';
 import { api, appProfile, type InstanceWithStatus } from './api';
 import { InstanceIcon } from './AppIcon';
+import { getThemeMode, applyThemeMode, nextThemeMode, type ThemeMode } from './theme';
 import InstanceView from './pages/Desktop';
 import Admin from './pages/Admin';
 
@@ -240,6 +241,41 @@ function Sidebar({ collapsed, onToggleCollapsed }: { collapsed: boolean; onToggl
   );
 }
 
+// 主题切换图标（跟随系统 / 亮色 / 深色 循环）。
+const themeIcon: Record<ThemeMode, JSX.Element> = {
+  auto: (
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor" stroke="none" />
+    </svg>
+  ),
+  light: (
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.4 1.4M17.6 17.6L19 19M19 5l-1.4 1.4M6.4 17.6L5 19" />
+    </svg>
+  ),
+  dark: (
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+      <path d="M20 14.5A8 8 0 0 1 9.5 4a7 7 0 1 0 10.5 10.5z" />
+    </svg>
+  ),
+};
+function ThemeToggle() {
+  const [mode, setMode] = useState<ThemeMode>(() => getThemeMode());
+  const cycle = () => {
+    const m = nextThemeMode(mode);
+    applyThemeMode(m);
+    setMode(m);
+  };
+  const label = mode === 'auto' ? '跟随系统' : mode === 'light' ? '亮色' : '深色';
+  return (
+    <button className="theme-toggle" onClick={cycle} title={`主题：${label}（点击切换：跟随系统 / 亮色 / 深色）`} aria-label={`主题：${label}`}>
+      {themeIcon[mode]}
+    </button>
+  );
+}
+
 function HomeView({ onOpenMenu, onChangePassword }: { onOpenMenu: () => void; onChangePassword: () => void }) {
   const { user } = useAuth();
   const { instances, loaded } = useInstances();
@@ -253,6 +289,7 @@ function HomeView({ onOpenMenu, onChangePassword }: { onOpenMenu: () => void; on
           {Icon.menu}
         </button>
         <span className="ws-title">主页</span>
+        <ThemeToggle />
       </header>
 
       <div className="content">
